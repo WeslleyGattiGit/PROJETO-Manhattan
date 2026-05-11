@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { initDatabase, getUserByEmail } = require('./database');
+const { initDatabase, getUserByEmail, createUser } = require('./database');
 
 const app = express();
 app.use(express.json());
@@ -9,6 +9,26 @@ app.use(express.json());
 initDatabase();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'conexxa-secret';
+
+app.post('/api/usuarios/register', (req, res) => {
+  const { nome, email, senha } = req.body || {};
+
+  if (!nome || !email || !senha || typeof nome !== 'string' || typeof email !== 'string' || typeof senha !== 'string') {
+    return res.status(400).json({ error: 'Requisição malformada. nome, email e senha são obrigatórios.' });
+  }
+
+  const emailClean = email.trim().toLowerCase();
+  const senhaHash = bcrypt.hashSync(senha, 10);
+
+  createUser(nome, emailClean, senhaHash, (err, user) => {
+    if (err) {
+      console.error('Erro ao criar usuário:', err);
+      return res.status(500).json({ error: 'Erro interno no servidor' });
+    }
+
+    return res.status(201).json({ id: user.id, nome: user.nome, email: user.email });
+  });
+});
 
 app.post('/api/usuarios/login', (req, res) => {
   const { email, senha } = req.body || {};

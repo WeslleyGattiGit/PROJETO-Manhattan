@@ -44,3 +44,27 @@ module.exports = {
   getUserByEmail,
   db,
 };
+
+const createUser = (nome, email, senhaHash, callback) => {
+  if (!nome || !email || !senhaHash) {
+    return callback(new Error('Nome, email e senha são obrigatórios'));
+  }
+
+  db.run('INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)',
+    [nome, email, senhaHash],
+    function(err) {
+      if (err) {
+        return callback(err);
+      }
+      callback(null, { id: this.lastID, nome, email });
+    }
+  );
+};
+
+
+module.exports = {
+  initDatabase,
+  getUserByEmail,
+  createUser,
+  db,
+};
