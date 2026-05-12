@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexa - Chat do Grupo</title>
+    <link rel="stylesheet" href="styles/chat.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-header">
+        <div class="brand">
+          <span class="brand__dot"></span>
+          <span class="brand__name">Connexa</span>
+        </div>
+        <div class="group-info">
+          <h1 class="group-info__title" id="groupName">Grupo de Estudo</h1>
+          <span class="group-info__meta" id="groupMeta"
+            >Sala de chat do grupo</span
+          >
+        </div>
+        <div class="header-actions">
+          <a class="link-button" href="/login.html">Sair</a>
+        </div>
+      </header>
+
+      <main class="chat-layout">
+        <section class="chat-panel card">
+          <div class="chat-panel__header">
+            <h2 class="chat-panel__title">Mensagens</h2>
+            <span class="chat-panel__badge" id="messageCount">0 mensagens</span>
+          </div>
+
+          <div
+            class="chat-messages"
+            id="messagesContainer"
+            aria-live="polite"
+          ></div>
+
+          <form class="chat-input" id="messageForm">
+            <label class="chat-input__label" for="messageInput">Mensagem</label>
+            <div class="chat-input__controls">
+              <input
+                type="text"
+                id="messageInput"
+                name="message"
+                class="chat-input__field"
+                placeholder="Digite sua mensagem"
+                autocomplete="off"
+                required
+              />
+              <button type="submit" class="primary-button">Enviar</button>
+            </div>
+            <p class="chat-input__hint" id="inputHint"></p>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script src="scripts/chat.js"></script>
+  </body>
+</html>
