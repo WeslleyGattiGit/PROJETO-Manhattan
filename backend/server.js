@@ -4,6 +4,11 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { initDatabase, getUserByEmail, createUser } = require("./database");
 
+// Importar rotas
+const authRoutes = require("./src/routes/auth");
+const chatsRoutes = require("./src/routes/chats");
+const gruposRoutes = require("./src/routes/grupos");
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
@@ -86,6 +91,29 @@ app.post("/api/usuarios/login", (req, res) => {
   });
 });
 
+/**
+ * ========================================
+ * REGISTRAR ROTAS PROTEGIDAS
+ * ========================================
+ * 
+ * As rotas abaixo incluem middleware de autenticação
+ * que valida o token JWT do usuário
+ */
+
+// Rotas de autenticação (verificar sessão)
+app.use("/api/auth", authRoutes);
+
+// Rotas de chats (mensagens dos grupos)
+app.use("/api/chats", chatsRoutes);
+
+// Rotas de grupos (criar, listar, entrar)
+app.use("/api/grupos", gruposRoutes);
+
+/**
+ * ========================================
+ * HANDLER DE ROTAS NÃO ENCONTRADAS
+ * ========================================
+ */
 app.use((req, res) => {
   res.status(404).json({ error: "Rota não encontrada" });
 });
