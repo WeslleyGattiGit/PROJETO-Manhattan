@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexa - Login</title>
+    <link rel="stylesheet" href="styles/login.css" />
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-card">
+        <h1 class="login-title">Connexa</h1>
+        <p class="login-subtitle">Grupos de Estudo Universitário</p>
+
+        <form id="loginForm" class="login-form">
+          <div class="form-group">
+            <label for="emailInput" class="form-label">Email</label>
+            <input
+              type="email"
+              id="emailInput"
+              name="email"
+              class="form-input"
+              placeholder="seu.email@exemplo.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="passwordInput" class="form-label">Senha</label>
+            <input
+              type="password"
+              id="passwordInput"
+              name="password"
+              class="form-input"
+              placeholder="Digite sua senha"
+              required
+            />
+          </div>
+
+          <button type="submit" class="login-button">Entrar</button>
+        </form>
+
+        <div class="login-footer">
+          <p class="signup-text">
+            Não tem conta?
+            <a href="cadastro.html" class="signup-link">Cadastre-se</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="scripts/login.js"></script>
+  </body>
+</html>
