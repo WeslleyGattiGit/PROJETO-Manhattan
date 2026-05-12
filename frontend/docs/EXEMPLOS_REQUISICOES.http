@@ -1,0 +1,264 @@
+# Exemplos de Requisições HTTP - Conexxa API
+# Use com Postman, Insomnia, cURL ou similar
+
+### ============================================
+### AUTH ENDPOINTS
+### ============================================
+
+### Login - Com Credenciais Válidas
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "usuario@example.com",
+  "senha": "senha123"
+}
+
+###
+
+### Login - Email Inválido
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "naoexiste@example.com",
+  "senha": "senha123"
+}
+
+###
+
+### Login - Senha Errada
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "usuario@example.com",
+  "senha": "senhaerrada"
+}
+
+###
+
+### Login - Campo Obrigatório Faltando
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "usuario@example.com"
+}
+
+###
+
+### Login - Tipo de Dados Inválido
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": 123,
+  "senha": false
+}
+
+###
+
+### ============================================
+### TESTES DE ERRO
+### ============================================
+
+### Rota Não Encontrada
+GET http://localhost:3000/api/inexistente
+
+###
+
+### Método não permitido
+DELETE http://localhost:3000/api/usuarios/login
+
+###
+
+### Content-Type Inválido
+POST http://localhost:3000/api/usuarios/login
+Content-Type: text/plain
+
+{
+  "email": "test@example.com",
+  "senha": "123456"
+}
+
+###
+
+### ============================================
+### TESTES DE SEGURANÇA
+### ============================================
+
+### SQL Injection Attempt
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "' OR '1'='1",
+  "senha": "' OR '1'='1"
+}
+
+###
+
+### XSS Attempt
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "<script>alert('xss')</script>@test.com",
+  "senha": "<img src=x onerror=alert('xss')>"
+}
+
+###
+
+### Large Payload
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "usuario@example.com",
+  "senha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+
+###
+
+### ============================================
+### CASOS DE USO
+### ============================================
+
+### Cenário 1: Novo Usuário - Tentativa de Login
+# Resultado Esperado: 401 Credenciais inválidas
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "novousuario@example.com",
+  "senha": "senhaTemporaria123"
+}
+
+###
+
+### Cenário 2: Múltiplas Tentativas Rápidas (Rate Limiting)
+# Resultado Esperado: 429 Too Many Requests (se implementado)
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "usuario@example.com",
+  "senha": "senha123"
+}
+
+###
+
+### ============================================
+### CURL EXAMPLES
+### ============================================
+
+# Login bem-sucedido
+# curl -X POST http://localhost:3000/api/usuarios/login \
+#   -H "Content-Type: application/json" \
+#   -d '{"email":"usuario@example.com","senha":"senha123"}'
+
+# Login com erro
+# curl -X POST http://localhost:3000/api/usuarios/login \
+#   -H "Content-Type: application/json" \
+#   -d '{"email":"invalido@example.com","senha":"errada"}'
+
+# Com token JWT
+# curl -X GET http://localhost:3000/api/usuarios/me \
+#   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+### ============================================
+### JAVASCRIPT FETCH EXAMPLES
+### ============================================
+
+/*
+// Login
+fetch('http://localhost:3000/api/usuarios/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    email: 'usuario@example.com',
+    senha: 'senha123'
+  })
+})
+.then(response => response.json())
+.then(data => {
+  console.log('Token:', data.token);
+  localStorage.setItem('token', data.token);
+})
+.catch(error => console.error('Erro:', error));
+
+// Com token
+fetch('http://localhost:3000/api/usuarios/me', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  }
+})
+.then(response => response.json())
+.then(data => console.log('User:', data))
+.catch(error => console.error('Erro:', error));
+*/
+
+### ============================================
+### POSTMAN COLLECTION JSON
+### ============================================
+
+/*
+{
+  "info": {
+    "name": "Conexxa API",
+    "description": "Testes para API de Autenticação",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/usuarios/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"usuario@example.com\",\"senha\":\"senha123\"}"
+        }
+      },
+      "response": []
+    }
+  ]
+}
+*/
+
+### ============================================
+### NOTAS
+### ============================================
+
+# Porta padrão do backend: 3000
+# Porta padrão do frontend: 8000
+
+# Variáveis Dinâmicas (se usando Insomnia/Postman):
+# {{base_url}} = http://localhost:3000
+# {{token}} = Resultado da resposta de login
+# {{email}} = Variável de teste
+# {{password}} = Variável de teste
+
+# Headers Recomendados:
+# Content-Type: application/json
+# Accept: application/json
+# Authorization: Bearer <token_jwt>
+# User-Agent: Conexxa-Client/1.0
+
+# Status Codes Esperados:
+# 200 - Sucesso
+# 400 - Requisição malformada
+# 401 - Não autorizado
+# 404 - Não encontrado
+# 500 - Erro no servidor
+# 429 - Rate limit excedido
