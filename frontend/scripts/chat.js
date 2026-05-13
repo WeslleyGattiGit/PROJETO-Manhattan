@@ -6,8 +6,13 @@ const messageForm = document.getElementById("messageForm");
 const messageInput = document.getElementById("messageInput");
 const inputHint = document.getElementById("inputHint");
 
+// Elementos da sidebar
+const groupsListEl = document.getElementById("groupsList");
+
 let currentUserId = null;
 let currentGroupId = null;
+let userGroups = [];
+let groupsRefreshTimer = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
@@ -15,6 +20,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupSession()
     .then(() => {
+      loadUserGroups();
+
+      window.addEventListener("focus", refreshGroupsIfNeeded);
+      document.addEventListener("visibilitychange", refreshGroupsIfNeeded);
+      groupsRefreshTimer = window.setInterval(loadUserGroups, 30000);
+
       if (!currentGroupId) {
         showEmptyState("Selecione um grupo para começar a conversar.");
         disableMessageForm("Informe um grupo para enviar mensagens.");
@@ -71,6 +82,136 @@ function setupSession() {
     });
 }
 
+/**
+ * Carrega e renderiza lista de grupos do usuário
+ */
+function loadUserGroups() {
+  const token = localStorage.getItem("authToken");
+
+  fetch("/api/chats", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      userGroups = data.grupos || [];
+      renderGroupsList(userGroups);
+      updateGroupHeader(currentGroupId);
+      updateActiveGroup();
+    })
+    .catch((error) => {
+      console.error("Erro ao carregar grupos:", error);
+      groupsListEl.innerHTML =
+        '<div class="groups-list__empty">Erro ao carregar grupos</div>';
+    });
+}
+
+/**
+ * Renderiza lista de grupos na sidebar
+ */
+function renderGroupsList(grupos) {
+  if (!grupos.length) {
+    groupsListEl.innerHTML =
+      '<div class="groups-list__empty">Nenhum grupo disponível</div>';
+    return;
+  }
+
+  groupsListEl.innerHTML = "";
+
+  grupos.forEach((grupo) => {
+    const groupItem = document.createElement("div");
+    groupItem.className = "group-item";
+    groupItem.dataset.groupId = grupo.id;
+
+    if (grupo.id == currentGroupId) {
+      groupItem.classList.add("group-item--active");
+    }
+
+    groupItem.innerHTML = `
+      <div class="group-item__name">${escapeHtml(grupo.nome)}</div>
+      <div class="group-item__meta">${escapeHtml(
+        grupo.descricao || "Sem descrição",
+      )}</div>
+    `;
+
+    groupItem.addEventListener("click", () => {
+      switchToGroup(grupo.id);
+    });
+
+    groupsListEl.appendChild(groupItem);
+  });
+}
+
+/**
+ * Alterna para grupo selecionado
+ */
+function switchToGroup(groupId) {
+  const url = new URL(window.location);
+  url.searchParams.set("groupId", groupId);
+  window.location.href = url.toString();
+}
+
+/**
+ * Marca o grupo ativo com classe CSS
+ */
+function updateActiveGroup() {
+  document.querySelectorAll(".group-item").forEach((item) => {
+    item.classList.remove("group-item--active");
+  });
+
+  if (currentGroupId) {
+    const activeItem = document.querySelector(
+      `[data-group-id="${currentGroupId}"]`,
+    );
+    if (activeItem) {
+      activeItem.classList.add("group-item--active");
+    }
+  }
+}
+
+function refreshGroupsIfNeeded() {
+  if (document.visibilityState === "visible") {
+    loadUserGroups();
+  }
+}
+
+function updateGroupHeader(groupId) {
+  const grupo = userGroups.find((g) => String(g.id) === String(groupId));
+
+  if (grupo) {
+    groupNameEl.textContent = grupo.nome;
+    groupMetaEl.textContent = grupo.descricao || "Sala de chat do grupo";
+    messageInput.disabled = false;
+    messageForm.querySelector("button").disabled = false;
+    return;
+  }
+
+  if (!groupId) {
+    groupNameEl.textContent = "Grupo de Estudo";
+    groupMetaEl.textContent = "Sala de chat do grupo";
+    return;
+  }
+
+  groupNameEl.textContent = "Grupo indisponível";
+  groupMetaEl.textContent = "Você não faz mais parte deste grupo";
+  disableMessageForm("Você não faz mais parte deste grupo.");
+  showEmptyState("Você não faz mais parte deste grupo.");
+}
+
+function escapeHtml(text) {
+  const map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
+
 function loadGroupMessages(groupId) {
   const token = localStorage.getItem("authToken");
 
@@ -90,6 +231,7 @@ function loadGroupMessages(groupId) {
 
       renderMessages(data.mensagens || []);
       updateMessageCount(data.total || 0);
+      updateGroupHeader(groupId);
     })
     .catch(() => {
       showEmptyState("Nao foi possivel carregar as mensagens.");
@@ -203,9 +345,11 @@ function updateMessageCount(total) {
 }
 
 function showEmptyState(text) {
-  messagesContainer.innerHTML = `
-    <div class="empty-state">${text}</div>
-  `;
+  messagesContainer.innerHTML = "";
+  const emptyDiv = document.createElement("div");
+  emptyDiv.className = "empty-state";
+  emptyDiv.textContent = text;
+  messagesContainer.appendChild(emptyDiv);
 }
 
 function clearEmptyState() {
@@ -224,3 +368,9 @@ function disableMessageForm(text) {
 function scrollToBottom() {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
+
+window.addEventListener("beforeunload", () => {
+  if (groupsRefreshTimer) {
+    window.clearInterval(groupsRefreshTimer);
+  }
+});

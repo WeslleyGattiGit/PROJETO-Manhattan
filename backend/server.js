@@ -28,11 +28,9 @@ app.post("/api/usuarios/register", (req, res) => {
     typeof email !== "string" ||
     typeof senha !== "string"
   ) {
-    return res
-      .status(400)
-      .json({
-        error: "Requisição malformada. nome, email e senha são obrigatórios.",
-      });
+    return res.status(400).json({
+      error: "Requisição malformada. nome, email e senha são obrigatórios.",
+    });
   }
 
   const emailClean = email.trim().toLowerCase();
@@ -59,11 +57,9 @@ app.post("/api/usuarios/login", (req, res) => {
     typeof email !== "string" ||
     typeof senha !== "string"
   ) {
-    return res
-      .status(400)
-      .json({
-        error: "Requisição malformada. email e senha são obrigatórios.",
-      });
+    return res.status(400).json({
+      error: "Requisição malformada. email e senha são obrigatórios.",
+    });
   }
 
   const emailClean = email.trim().toLowerCase();
@@ -91,29 +87,10 @@ app.post("/api/usuarios/login", (req, res) => {
   });
 });
 
-/**
- * ========================================
- * REGISTRAR ROTAS PROTEGIDAS
- * ========================================
- * 
- * As rotas abaixo incluem middleware de autenticação
- * que valida o token JWT do usuário
- */
-
-// Rotas de autenticação (verificar sessão)
+// Rotas autenticadas
 app.use("/api/auth", authRoutes);
-
-// Rotas de chats (mensagens dos grupos)
 app.use("/api/chats", chatsRoutes);
-
-// Rotas de grupos (criar, listar, entrar)
 app.use("/api/grupos", gruposRoutes);
-
-/**
- * ========================================
- * HANDLER DE ROTAS NÃO ENCONTRADAS
- * ========================================
- */
 app.use((req, res) => {
   res.status(404).json({ error: "Rota não encontrada" });
 });

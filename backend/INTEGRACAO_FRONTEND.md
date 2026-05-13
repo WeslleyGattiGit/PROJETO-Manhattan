@@ -403,3 +403,117 @@ if (response.status >= 500) {
  */
 
 module.exports = {};
+/**
+ * ========================================
+ * 8. IMPLEMENTAÇÃO DA SIDEBAR DE GRUPOS
+ * ========================================
+ * 
+ * LOCALIZAÇÃO: /frontend/chat.html e /frontend/scripts/chat.js
+ * 
+ * OBJETIVO: Exibir lista de grupos do usuário na lateral esquerda da tela de chat,
+ * permitindo alternar entre grupos facilmente
+ * 
+ * ESTRUTURA HTML:
+ * - Elemento <aside class="groups-sidebar">
+ * - Lista de grupos em <div class="groups-list" id="groupsList">
+ * - Cada grupo é um <div class="group-item">
+ * 
+ * FUNCIONALIDADES IMPLEMENTADAS:
+ * 
+ * 1. Carregamento automático de grupos
+ *    - Função: loadUserGroups()
+ *    - Chamada: No DOMContentLoaded após setupSession()
+ *    - Endpoint: GET /api/chats
+ *    - Exibe: Todos os grupos em que o usuário é membro
+ * 
+ * 2. Renderização visual
+ *    - Função: renderGroupsList(grupos)
+ *    - Cada grupo mostra: nome + descrição
+ *    - Destaque visual para grupo ativo
+ *    - Hover effect para melhor UX
+ * 
+ * 3. Alternância entre grupos
+ *    - Função: switchToGroup(groupId)
+ *    - Comportamento: Navega para URL com ?groupId=X
+ *    - Resultado: Página recarrega com novo grupo
+ * 
+ * 4. Atualização do header
+ *    - Função: updateGroupHeader(groupId)
+ *    - Atualiza: Nome e descrição no <header>
+ *    - Ativa: Campo de input de mensagens
+ * 
+ * FLUXO DE EXECUÇÃO:
+ * 
+ * 1. DOMContentLoaded disparado
+ * 2. setupSession() valida token e obtém userId
+ * 3. loadUserGroups() busca grupos do usuário (GET /api/chats)
+ * 4. renderGroupsList() renderiza grupos na sidebar
+ * 5. Se URL tem ?groupId=X:
+ *    - loadGroupMessages() carrega mensagens
+ *    - updateGroupHeader() atualiza header
+ * 6. Usuário clica em grupo na sidebar
+ * 7. switchToGroup() navega para nova URL
+ * 
+ * ESTILOS CSS:
+ * 
+ * Classes disponíveis:
+ * - .groups-sidebar: Container da sidebar
+ * - .groups-sidebar__header: Cabeçalho com título "Chats"
+ * - .groups-list: Container da lista de grupos
+ * - .group-item: Item individual de grupo
+ * - .group-item--active: Estado ativo (grupo selecionado)
+ * - .group-item__name: Nome do grupo
+ * - .group-item__meta: Descrição/metadados do grupo
+ * 
+ * Responsividade:
+ * - Desktop (>900px): Sidebar vertical na esquerda
+ * - Tablet (900px-700px): Sidebar horizontal acima do chat
+ * - Mobile (<700px): Sidebar redimensionada
+ * 
+ * INTEGRAÇÃO COM BACKEND:
+ * 
+ * Endpoints necessários:
+ * 1. GET /api/chats (listar grupos do usuário)
+ *    Retorna: { grupos: [{id, nome, descricao, criador_id, criado_em}] }
+ * 
+ * 2. GET /api/chats/:groupId (listar mensagens)
+ *    Retorna: { mensagens: [...], total: N }
+ * 
+ * Token JWT:
+ * - Obrigatório em header Authorization: Bearer <token>
+ * - Validade: 2 horas
+ * - Renovação: Ao fazer login novamente
+ * 
+ * EXEMPLO DE USO COMPLETO:
+ * 
+ * // Ao abrir chat.html
+ * 1. Valida token → setupSession()
+ * 2. Carrega grupos → loadUserGroups()
+ *    Request: GET /api/chats
+ *    Header: Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+ * 
+ * 3. Renderiza na sidebar
+ *    [Algoritmos 2024]
+ *    [Estrutura de Dados]
+ *    [Programação Web]
+ * 
+ * 4. Usuário clica em grupo
+ *    switchToGroup(1) → window.location = ?groupId=1
+ * 
+ * 5. Página recarrega com novo grupo
+ *    loadGroupMessages(1) → GET /api/chats/1?limit=50
+ *    updateGroupHeader(1) → Atualiza "Algoritmos 2024" no header
+ * 
+ * TRATAMENTO DE ERROS:
+ * 
+ * - Nenhum grupo disponível: Mostra "Nenhum grupo disponível"
+ * - Erro ao carregar: Mostra "Erro ao carregar grupos"
+ * - Grupo sem descrição: Exibe "Sem descrição" como placeholder
+ * - XSS Prevention: Função escapeHtml() para sanitizar nomes
+ */
+
+/*
+ * ========================================
+ * FLUXO DE NAVEGAÇÃO RECOMENDADO
+ * ========================================
+ */
