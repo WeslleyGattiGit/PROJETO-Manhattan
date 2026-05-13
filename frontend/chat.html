@@ -29,8 +29,23 @@
         <aside class="groups-sidebar card">
           <div class="groups-sidebar__header">
             <h3 class="groups-sidebar__title">Chats</h3>
+            <div class="groups-sidebar__search">
+              <label class="groups-sidebar__label" for="groupSearchInput"
+                >Buscar grupos</label
+              >
+              <input
+                type="search"
+                id="groupSearchInput"
+                class="groups-sidebar__input"
+                placeholder="Digite o nome do grupo"
+                autocomplete="off"
+              />
+              <span class="groups-sidebar__status" id="groupSearchStatus"
+                >Mostrando seus grupos</span
+              >
+            </div>
           </div>
-          
+
           <div class="groups-list" id="groupsList">
             <div class="groups-list__empty">Nenhum grupo disponível</div>
           </div>

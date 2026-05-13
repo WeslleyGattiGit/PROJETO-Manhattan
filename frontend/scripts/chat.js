@@ -8,11 +8,15 @@ const inputHint = document.getElementById("inputHint");
 
 // Elementos da sidebar
 const groupsListEl = document.getElementById("groupsList");
+const groupSearchInput = document.getElementById("groupSearchInput");
+const groupSearchStatus = document.getElementById("groupSearchStatus");
 
 let currentUserId = null;
 let currentGroupId = null;
 let userGroups = [];
 let groupsRefreshTimer = null;
+let groupSearchTimer = null;
+let lastSearchTerm = "";
 
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
@@ -21,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupSession()
     .then(() => {
       loadUserGroups();
+      setupGroupSearch();
 
       window.addEventListener("focus", refreshGroupsIfNeeded);
       document.addEventListener("visibilitychange", refreshGroupsIfNeeded);
@@ -98,9 +103,15 @@ function loadUserGroups() {
     .then((response) => response.json())
     .then((data) => {
       userGroups = data.grupos || [];
-      renderGroupsList(userGroups);
-      updateGroupHeader(currentGroupId);
-      updateActiveGroup();
+      const searchTerm = getActiveSearchTerm();
+      if (searchTerm) {
+        searchGroups(searchTerm);
+      } else {
+        renderGroupsList(userGroups, { mode: "user" });
+        updateGroupSearchStatus();
+        updateGroupHeader(currentGroupId);
+        updateActiveGroup();
+      }
     })
     .catch((error) => {
       console.error("Erro ao carregar grupos:", error);
@@ -112,33 +123,65 @@ function loadUserGroups() {
 /**
  * Renderiza lista de grupos na sidebar
  */
-function renderGroupsList(grupos) {
-  if (!grupos.length) {
-    groupsListEl.innerHTML =
-      '<div class="groups-list__empty">Nenhum grupo disponível</div>';
+function renderGroupsList(grupos, options = {}) {
+  const mode = options.mode || "user";
+  const list = Array.isArray(grupos) ? grupos : [];
+  const emptyMessage =
+    mode === "search" ? "Nenhum grupo encontrado" : "Nenhum grupo disponível";
+
+  if (!list.length) {
+    groupsListEl.innerHTML = `<div class="groups-list__empty">${emptyMessage}</div>`;
     return;
   }
 
   groupsListEl.innerHTML = "";
 
-  grupos.forEach((grupo) => {
+  list.forEach((grupo) => {
     const groupItem = document.createElement("div");
     groupItem.className = "group-item";
     groupItem.dataset.groupId = grupo.id;
+
+    const isMember = isUserMember(grupo.id);
 
     if (grupo.id == currentGroupId) {
       groupItem.classList.add("group-item--active");
     }
 
-    groupItem.innerHTML = `
-      <div class="group-item__name">${escapeHtml(grupo.nome)}</div>
-      <div class="group-item__meta">${escapeHtml(
-        grupo.descricao || "Sem descrição",
-      )}</div>
-    `;
+    const nameEl = document.createElement("div");
+    nameEl.className = "group-item__name";
+    nameEl.textContent = grupo.nome;
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "group-item__meta";
+    metaEl.textContent = grupo.descricao || "Sem descrição";
+
+    const footerEl = document.createElement("div");
+    footerEl.className = "group-item__footer";
+
+    const tagEl = document.createElement("span");
+    tagEl.className = "group-item__tag";
+    tagEl.textContent = isMember ? "Você participa" : "Não participa";
+
+    footerEl.appendChild(tagEl);
+
+    if (mode === "search" && !isMember) {
+      const joinButton = document.createElement("button");
+      joinButton.type = "button";
+      joinButton.className = "group-item__action";
+      joinButton.textContent = "Entrar";
+      joinButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        joinGroup(grupo.id);
+      });
+      footerEl.appendChild(joinButton);
+    }
+
+    groupItem.append(nameEl, metaEl, footerEl);
 
     groupItem.addEventListener("click", () => {
-      switchToGroup(grupo.id);
+      if (isMember) {
+        switchToGroup(grupo.id);
+      }
     });
 
     groupsListEl.appendChild(groupItem);
@@ -172,6 +215,114 @@ function updateActiveGroup() {
   }
 }
 
+function setupGroupSearch() {
+  if (!groupSearchInput) {
+    return;
+  }
+
+  groupSearchInput.addEventListener("input", () => {
+    const term = getActiveSearchTerm();
+
+    if (groupSearchTimer) {
+      clearTimeout(groupSearchTimer);
+    }
+
+    groupSearchTimer = window.setTimeout(() => {
+      if (term === lastSearchTerm) {
+        return;
+      }
+
+      lastSearchTerm = term;
+
+      if (!term) {
+        renderGroupsList(userGroups, { mode: "user" });
+        updateGroupSearchStatus();
+        updateGroupHeader(currentGroupId);
+        updateActiveGroup();
+        return;
+      }
+
+      searchGroups(term);
+    }, 350);
+  });
+}
+
+function getActiveSearchTerm() {
+  if (!groupSearchInput) {
+    return "";
+  }
+
+  return groupSearchInput.value.trim();
+}
+
+function updateGroupSearchStatus(text) {
+  if (!groupSearchStatus) {
+    return;
+  }
+
+  groupSearchStatus.textContent = text || "Mostrando seus grupos";
+}
+
+function searchGroups(term) {
+  const token = localStorage.getItem("authToken");
+
+  updateGroupSearchStatus("Buscando...");
+
+  fetch(`/api/grupos?search=${encodeURIComponent(term)}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      const grupos = data.grupos || [];
+      renderGroupsList(grupos, { mode: "search" });
+      updateGroupSearchStatus(
+        grupos.length === 1
+          ? "1 grupo encontrado"
+          : `${grupos.length} grupos encontrados`,
+      );
+    })
+    .catch(() => {
+      groupsListEl.innerHTML =
+        '<div class="groups-list__empty">Erro ao buscar grupos</div>';
+      updateGroupSearchStatus("Erro na busca");
+    });
+}
+
+function isUserMember(groupId) {
+  return userGroups.some((grupo) => String(grupo.id) === String(groupId));
+}
+
+function joinGroup(groupId) {
+  const token = localStorage.getItem("authToken");
+
+  updateGroupSearchStatus("Entrando no grupo...");
+
+  fetch(`/api/grupos/${groupId}/join`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.error) {
+        updateGroupSearchStatus(data.error);
+        return;
+      }
+
+      loadUserGroups();
+      updateGroupSearchStatus("Grupo adicionado aos seus chats");
+    })
+    .catch(() => {
+      updateGroupSearchStatus("Erro ao entrar no grupo");
+    });
+}
+
 function refreshGroupsIfNeeded() {
   if (document.visibilityState === "visible") {
     loadUserGroups();
@@ -199,17 +350,6 @@ function updateGroupHeader(groupId) {
   groupMetaEl.textContent = "Você não faz mais parte deste grupo";
   disableMessageForm("Você não faz mais parte deste grupo.");
   showEmptyState("Você não faz mais parte deste grupo.");
-}
-
-function escapeHtml(text) {
-  const map = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;",
-  };
-  return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
 function loadGroupMessages(groupId) {
