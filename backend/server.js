@@ -4,6 +4,11 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { initDatabase, getUserByEmail, createUser } = require("./database");
 
+// Importar rotas
+const authRoutes = require("./src/routes/auth");
+const chatsRoutes = require("./src/routes/chats");
+const gruposRoutes = require("./src/routes/grupos");
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
@@ -23,11 +28,9 @@ app.post("/api/usuarios/register", (req, res) => {
     typeof email !== "string" ||
     typeof senha !== "string"
   ) {
-    return res
-      .status(400)
-      .json({
-        error: "Requisição malformada. nome, email e senha são obrigatórios.",
-      });
+    return res.status(400).json({
+      error: "Requisição malformada. nome, email e senha são obrigatórios.",
+    });
   }
 
   const emailClean = email.trim().toLowerCase();
@@ -54,11 +57,9 @@ app.post("/api/usuarios/login", (req, res) => {
     typeof email !== "string" ||
     typeof senha !== "string"
   ) {
-    return res
-      .status(400)
-      .json({
-        error: "Requisição malformada. email e senha são obrigatórios.",
-      });
+    return res.status(400).json({
+      error: "Requisição malformada. email e senha são obrigatórios.",
+    });
   }
 
   const emailClean = email.trim().toLowerCase();
@@ -86,6 +87,10 @@ app.post("/api/usuarios/login", (req, res) => {
   });
 });
 
+// Rotas autenticadas
+app.use("/api/auth", authRoutes);
+app.use("/api/chats", chatsRoutes);
+app.use("/api/grupos", gruposRoutes);
 app.use((req, res) => {
   res.status(404).json({ error: "Rota não encontrada" });
 });
