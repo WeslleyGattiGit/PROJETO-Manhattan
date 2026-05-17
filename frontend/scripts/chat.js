@@ -21,7 +21,24 @@ let lastSearchTerm = "";
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   currentGroupId = params.get("groupId");
+  initPage();
+});
 
+/**
+ * Detecta quando a página é restaurada do back-forward cache
+ * (navegação com o botão Voltar/Avançar do navegador).
+ * Redireciona para login se o token não existir mais.
+ */
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+  }
+});
+
+function initPage() {
   setupSession()
     .then(() => {
       // Libera a exibição da página apenas após sessão validada
@@ -50,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .catch(() => {
       showEmptyState("Não foi possível carregar o chat.");
     });
-});
+}
 
 messageForm.addEventListener("submit", (event) => {
   event.preventDefault();

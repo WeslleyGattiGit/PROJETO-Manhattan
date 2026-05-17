@@ -5,15 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Connexa - Chat do Grupo</title>
     <link rel="stylesheet" href="styles/chat.css" />
-    <style>
-      .page { display: none; }
-    </style>
+    <style>.page{display:none}</style>
   </head>
   <body>
     <div class="page">
       <header class="page-header">
-        <a href="login.html"><img src="assets/fatec.png" alt="logo" /></a>
-         <button type="button" class="link-button" id="logoutBtn">Sair</button>
+        <div class="brand">
+          <span class="brand__dot"></span>
+          <span class="brand__name">Connexa</span>
+        </div>
+        <div class="group-info">
+          <h1 class="group-info__title" id="groupName">Grupo de Estudo</h1>
+          <span class="group-info__meta" id="groupMeta">Sala de chat do grupo</span>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="logout-btn" id="logoutBtn">Sair</button>
+        </div>
       </header>
 
       <main class="chat-layout">

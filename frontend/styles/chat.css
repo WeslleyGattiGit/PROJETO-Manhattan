@@ -91,6 +91,22 @@ body {
   font-weight: 600;
 }
 
+.logout-btn {
+  text-decoration: none;
+  color: var(--color-primary);
+  font-weight: 600;
+  background: none;
+  border: none;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.logout-btn:hover {
+  text-decoration: underline;
+}
+
 .chat-layout {
   flex: 1;
   display: flex;
