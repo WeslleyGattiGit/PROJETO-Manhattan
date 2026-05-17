@@ -17,7 +17,7 @@ document
       .then((data) => {
         if (data.token) {
           localStorage.setItem("authToken", data.token);
-          window.location.href = "/chat.html";
+          window.location.href = "chat.html";
         } else if (data.error) {
           const errorDiv = document.createElement("div");
           errorDiv.style.cssText =

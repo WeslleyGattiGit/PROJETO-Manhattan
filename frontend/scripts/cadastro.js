@@ -120,7 +120,7 @@ function registerUser(userData) {
       if (data.id) {
         // Cadastro bem-sucedido
         alert("Cadastro realizado com sucesso! Faça login para continuar.");
-        window.location.href = "/login.html";
+        window.location.href = "login.html";
       } else if (data.error) {
         showError(data.error);
       } else {
