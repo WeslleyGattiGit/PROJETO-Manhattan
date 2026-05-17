@@ -16,7 +16,7 @@ document
       .then((response) => response.json())
       .then((data) => {
         if (data.token) {
-          localStorage.setItem("authToken", data.token);
+          sessionStorage.setItem("authToken", data.token);
           window.location.href = "chat.html";
         } else if (data.error) {
           const errorDiv = document.createElement("div");

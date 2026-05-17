@@ -24,12 +24,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupSession()
     .then(() => {
+      // Libera a exibição da página apenas após sessão validada
+      document.querySelector(".page").style.display = "flex";
       loadUserGroups();
       setupGroupSearch();
 
       window.addEventListener("focus", refreshGroupsIfNeeded);
       document.addEventListener("visibilitychange", refreshGroupsIfNeeded);
       groupsRefreshTimer = window.setInterval(loadUserGroups, 30000);
+
+      // logout button
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", handleLogout);
+      }
 
       if (!currentGroupId) {
         showEmptyState("Selecione um grupo para começar a conversar.");
@@ -58,7 +66,7 @@ messageForm.addEventListener("submit", (event) => {
 });
 
 function setupSession() {
-  const token = localStorage.getItem("authToken");
+  const token = sessionStorage.getItem("authToken");
   if (!token) {
     window.location.href = "login.html";
     return Promise.reject();
@@ -74,7 +82,7 @@ function setupSession() {
     .then((response) => {
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem("authToken");
+          sessionStorage.removeItem("authToken");
           window.location.href = "login.html";
         }
         throw new Error("Sessao invalida");
@@ -91,7 +99,7 @@ function setupSession() {
  * Carrega e renderiza lista de grupos do usuário
  */
 function loadUserGroups() {
-  const token = localStorage.getItem("authToken");
+  const token = sessionStorage.getItem("authToken");
 
   fetch("/api/chats", {
     method: "GET",
@@ -264,7 +272,7 @@ function updateGroupSearchStatus(text) {
 }
 
 function searchGroups(term) {
-  const token = localStorage.getItem("authToken");
+  const token = sessionStorage.getItem("authToken");
 
   updateGroupSearchStatus("Buscando...");
 
@@ -297,7 +305,7 @@ function isUserMember(groupId) {
 }
 
 function joinGroup(groupId) {
-  const token = localStorage.getItem("authToken");
+  const token = sessionStorage.getItem("authToken");
 
   updateGroupSearchStatus("Entrando no grupo...");
 
@@ -353,7 +361,7 @@ function updateGroupHeader(groupId) {
 }
 
 function loadGroupMessages(groupId) {
-  const token = localStorage.getItem("authToken");
+  const token = sessionStorage.getItem("authToken");
 
   fetch(`/api/chats/${groupId}?limit=50`, {
     method: "GET",
@@ -383,7 +391,7 @@ function sendMessage(groupId, conteudo) {
     return;
   }
 
-  const token = localStorage.getItem("authToken");
+  const token = sessionStorage.getItem("authToken");
   const submitButton = messageForm.querySelector("button");
   submitButton.disabled = true;
 
@@ -507,6 +515,34 @@ function disableMessageForm(text) {
 
 function scrollToBottom() {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+/**
+ * Faz logout: invalida o token no servidor, remove da sessionStorage e redireciona
+ */
+async function handleLogout() {
+  const token = sessionStorage.getItem("authToken");
+
+  try {
+    // Requisição assíncrona não aguarda resposta para não bloquear a navegação
+    fetch("/api/auth/logout", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }).catch(() => {
+      // Silencioso — mesmo se falhar, removemos o token localmente
+    });
+  } catch {
+    // Ignora erros de fetch
+  }
+
+  // Remove token da sessionStorage imediatamente
+  sessionStorage.removeItem("authToken");
+
+  // Redireciona para o login
+  window.location.href = "login.html";
 }
 
 window.addEventListener("beforeunload", () => {
