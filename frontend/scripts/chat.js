@@ -60,7 +60,7 @@ messageForm.addEventListener("submit", (event) => {
 function setupSession() {
   const token = localStorage.getItem("authToken");
   if (!token) {
-    window.location.href = window.location.origin + "/frontend/models/login.html";
+    window.location.href = "login.html";
     return Promise.reject();
   }
 
@@ -75,7 +75,7 @@ function setupSession() {
       if (!response.ok) {
         if (response.status === 401) {
           localStorage.removeItem("authToken");
-          window.location.href = window.location.origin + "/frontend/models/login.html";
+          window.location.href = "login.html";
         }
         throw new Error("Sessao invalida");
       }

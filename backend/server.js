@@ -92,7 +92,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatsRoutes);
 app.use("/api/grupos", gruposRoutes);
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/models/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
 const port = process.env.PORT || 3000;
