@@ -1,4 +1,13 @@
 {
+  "name": "connexxa",
+  "version": "1.0.0",
+  "description": "Study groups chat application",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "test": "node -e \"console.log('Test command placeholder')\""
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "express": "^5.2.1",

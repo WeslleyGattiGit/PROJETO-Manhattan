@@ -1,5 +1,53 @@
 /**
  * ========================================
+ * GUIA DE DEPLOY — RENDER
+ * ========================================
+ *
+ * Este projeto usa SQLite (banco de dados em arquivo).
+ * ATENÇÃO: No plano gratuito do Render, o disco é EFÊMERO.
+ * Quando o servidor reinicia (após ~15 min de inatividade),
+ * o arquivo database/conexxa.db é APAGADO. Todos os dados são perdidos.
+ *
+ * Para persistência real, troque SQLite por PostgreSQL
+ * (o Render oferece banco gratuito).
+ *
+ * Passo a passo:
+ *
+ * 1. Faça push do código para o GitHub
+ *    (certifique-se que package.json tem o script "start")
+ *
+ * 2. No Render: New + → Web Service
+ *    - Conecte seu repositório GitHub
+ *    - Nome: connexxa (ou o nome do seu repo)
+ *
+ * 3. Configurações:
+ *    - Runtime: Node
+ *    - Build Command: npm install
+ *    - Start Command: node backend/server.js
+ *
+ * 4. Clique "Create Web Service"
+ *    - Deploy leva ~3 minutos
+ *    - Quando terminar, você ganha uma URL pública
+ *      ex: https://connexxa.onrender.com
+ *
+ * 5. Acesse a URL de qualquer lugar do mundo:
+ *    - https://seu-app.onrender.com/login.html
+ *    - https://seu-app.onrender.com/chat.html
+ *    - O frontend carrega do próprio Render
+ *      (ele serve arquivos estáticos via app.use(express.static(...)))
+ *
+ * 6. Teste com outra pessoa:
+ *    - Compartilhe a URL
+ *    - Ela acessa, cria conta, entra em grupos, envia mensagens
+ *    - Funciona desde que o servidor não tenha hibernado
+ *
+ * IMPORTANTE: No plano gratuito, o servidor "dorme" após 15 min.
+ * A primeira pessoa que acessar após esse tempo vai esperar ~30s
+ * até o servidor acordar. Depois disso funciona normalmente.
+ */
+
+/**
+ * ========================================
  * GUIA DE TESTES - ENDPOINTS DE AUTENTICAÇÃO E CHATS
  * ========================================
  * 
@@ -7,6 +55,9 @@
  * implementados usando curl ou qualquer cliente HTTP (Postman, Insomnia, etc.)
  * 
  * IMPORTANTE: Substitua <token> pelos tokens reais obtidos no login
+ * 
+ * Para testar em produção (Render), substitua localhost:3000 pela URL do Render.
+ * Exemplo: https://seu-app.onrender.com/api/usuarios/login
  */
 
 /**

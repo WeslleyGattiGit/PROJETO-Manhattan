@@ -91,14 +91,8 @@ app.post("/api/usuarios/login", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatsRoutes);
 app.use("/api/grupos", gruposRoutes);
-// Se a rota começar com /api, retornamos 404 em JSON
-// Para todas as outras rotas (frontend), enviamos chat.html
 app.use((req, res) => {
-  if (req.path && req.path.startsWith("/api")) {
-    return res.status(404).json({ error: "Rota não encontrada" });
-  }
-
-  return res.sendFile(path.join(__dirname, "../frontend/chat.html"));
+  res.status(404).json({ error: "Rota não encontrada" });
 });
 
 const port = process.env.PORT || 3000;
