@@ -100,6 +100,20 @@ curl "http://localhost:3000/api/grupos?search=algoritmos" -H "Authorization: Bea
 - Se receber erro do Git ao trocar de branch por causa do arquivo do DB, pare o servidor (feche conexões com o arquivo SQLite), ou ignore o `database/conexxa.db` no `.gitignore`.
 - Para desenvolvimento rápido, abra o console do navegador e recupere o token com: `localStorage.getItem('authToken')`.
 
+**Comunicação em Tempo Real (Socket.IO)**
+
+O chat agora suporta mensagens em tempo real via WebSocket. Quando uma mensagem é enviada:
+
+1. O backend salva a mensagem no banco
+2. Emite o evento `newMessage` para todos os usuários conectados no grupo
+3. Os clientes recebem instantaneamente e atualizam a interface
+
+Arquivos modificados:
+- `backend/server.js` - Configuração do Socket.IO server
+- `backend/src/routes/chats.js` - Emissão do evento após salvar mensagem
+- `frontend/chat.html` - Inclusão do script socket.io
+- `frontend/scripts/chat.js` - Lógica de conexão e recepção de mensagens
+
 **Contribuição**
 
 - Fork e pull requests são bem-vindos. Siga o padrão de código existente e mantenha alterações pequenas e testáveis.

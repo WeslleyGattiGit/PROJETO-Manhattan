@@ -2,7 +2,9 @@ const express = require("express");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { initDatabase, getUserByEmail, createUser } = require("./database");
+const http = require("http");
+const { Server } = require("socket.io");
+const { initDatabase, getUserByEmail, createUser, getUserById } = require("./database");
 
 // Importar rotas
 const authRoutes = require("./src/routes/auth");
@@ -16,6 +18,59 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 initDatabase();
 
 const JWT_SECRET = process.env.JWT_SECRET || "conexxa-secret";
+
+// Criar servidor HTTP compartilhado
+const server = http.createServer(app);
+
+// Configurar Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+// Middleware de autenticação para Socket.IO
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace("Bearer ", "");
+
+  if (!token) {
+    return next(new Error("Token de autenticação não fornecido"));
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    socket.userId = decoded.sub;
+    socket.userEmail = decoded.email;
+    next();
+  } catch (err) {
+    next(new Error("Token inválido"));
+  }
+});
+
+// Lógica de conexão Socket.IO
+io.on("connection", (socket) => {
+  console.log(`Usuário ${socket.userId} conectado via Socket.IO`);
+
+  // Entrar em uma sala de grupo
+  socket.on("joinGroup", (groupId) => {
+    socket.join(`group_${groupId}`);
+    console.log(`Usuário ${socket.userId} entrou na sala group_${groupId}`);
+  });
+
+  // Sair de uma sala de grupo
+  socket.on("leaveGroup", (groupId) => {
+    socket.leave(`group_${groupId}`);
+    console.log(`Usuário ${socket.userId} saiu da sala group_${groupId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`Usuário ${socket.userId} desconectado`);
+  });
+});
+
+// Exportar io para uso nas rotas
+app.set("io", io);
 
 app.post("/api/usuarios/register", (req, res) => {
   const { nome, email, senha } = req.body || {};
@@ -96,6 +151,6 @@ app.use((req, res) => {
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });

@@ -11,12 +11,14 @@ const groupsListEl = document.getElementById("groupsList");
 const groupSearchInput = document.getElementById("groupSearchInput");
 const groupSearchStatus = document.getElementById("groupSearchStatus");
 
+let socket = null;
 let currentUserId = null;
 let currentGroupId = null;
 let userGroups = [];
 let groupsRefreshTimer = null;
 let groupSearchTimer = null;
 let lastSearchTerm = "";
+let displayedMessageIds = new Set();
 
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
@@ -41,16 +43,15 @@ window.addEventListener("pageshow", (event) => {
 function initPage() {
   setupSession()
     .then(() => {
-      // Libera a exibição da página apenas após sessão validada
       document.querySelector(".page").style.display = "flex";
       loadUserGroups();
       setupGroupSearch();
+      initSocket();
 
       window.addEventListener("focus", refreshGroupsIfNeeded);
       document.addEventListener("visibilitychange", refreshGroupsIfNeeded);
       groupsRefreshTimer = window.setInterval(loadUserGroups, 30000);
 
-      // logout button
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
         logoutBtn.addEventListener("click", handleLogout);
@@ -110,6 +111,40 @@ function setupSession() {
       currentUserId = user.id;
       return user;
     });
+}
+
+// Inicializar conexão Socket.IO
+function initSocket() {
+  const token = sessionStorage.getItem("authToken");
+  if (!token) return;
+
+  socket = io({
+    auth: {
+      token: token
+    }
+  });
+
+  socket.on("connect", () => {
+    console.log("Conectado ao Socket.IO");
+    if (currentGroupId) {
+      socket.emit("joinGroup", currentGroupId);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Desconectado do Socket.IO");
+  });
+
+  socket.on("newMessage", (message) => {
+    if (String(message.grupo_id) === String(currentGroupId)) {
+      appendMessage(message);
+      updateMessageCount();
+    }
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error("Erro de conexão Socket.IO:", err.message);
+  });
 }
 
 /**
@@ -378,6 +413,8 @@ function updateGroupHeader(groupId) {
 }
 
 function loadGroupMessages(groupId) {
+  displayedMessageIds.clear();
+
   const token = sessionStorage.getItem("authToken");
 
   fetch(`/api/chats/${groupId}?limit=50`, {
@@ -430,8 +467,6 @@ function sendMessage(groupId, conteudo) {
       }
 
       if (data.mensagem) {
-        appendMessage(data.mensagem);
-        updateMessageCount();
         messageInput.value = "";
         messageInput.focus();
       }
@@ -455,6 +490,12 @@ function renderMessages(messages) {
 }
 
 function appendMessage(message) {
+  // Evita duplicação: verifica se mensagem já foi exibida
+  if (displayedMessageIds.has(message.id)) {
+    return;
+  }
+  displayedMessageIds.add(message.id);
+
   clearEmptyState();
 
   const messageEl = document.createElement("div");

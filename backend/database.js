@@ -243,6 +243,20 @@ const saveMessage = (groupId, userId, conteudo, callback) => {
   );
 };
 
+const getGroupMembers = (groupId, callback) => {
+  const query = `
+    SELECT u.id, u.nome, u.email
+    FROM usuarios u
+    INNER JOIN usuarios_grupos ug ON u.id = ug.usuario_id
+    WHERE ug.grupo_id = ?
+  `;
+
+  db.all(query, [groupId], (err, rows) => {
+    if (err) return callback(err);
+    callback(null, rows || []);
+  });
+};
+
 module.exports = {
   initDatabase,
   getUserByEmail,
@@ -253,5 +267,6 @@ module.exports = {
   addUserToGroup,
   getGroupMessages,
   saveMessage,
+  getGroupMembers,
   db,
 };

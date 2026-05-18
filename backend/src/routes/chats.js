@@ -1,6 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
-const { getGroupMessages, saveMessage, getUserGroups, getUserById } = require('../../database');
+const { getGroupMessages, saveMessage, getUserGroups, getUserById, getGroupMembers } = require('../../database');
 
 const router = express.Router();
 
@@ -184,6 +184,12 @@ router.post('/:groupId/send', authMiddleware, (req, res) => {
         mensagem.usuario_nome = user.nome;
         mensagem.usuario_email = user.email;
         mensagem.usuario_foto = user.foto_url;
+      }
+
+      // Emitir evento Socket.IO para todos os membros do grupo
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`group_${groupId}`).emit('newMessage', mensagem);
       }
 
       return res.status(201).json({ 

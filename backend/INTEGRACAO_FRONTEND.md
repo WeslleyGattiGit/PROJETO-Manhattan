@@ -517,3 +517,83 @@ module.exports = {};
  * FLUXO DE NAVEGAÇÃO RECOMENDADO
  * ========================================
  */
+
+/**
+ * ========================================
+ * 9. COMUNICAÇÃO EM TEMPO REAL COM SOCKET.IO
+ * ========================================
+ * 
+ * OBJETIVO: Receber mensagens novas instantaneamente sem atualizar a página
+ * TECNOLOGIA: Socket.IO (WebSocket com fallback automático)
+ * 
+ * COMPONENTES:
+ * - Backend: server.js (configuração do Socket.IO)
+ * - Frontend: chat.html (script socket.io), chat.js (lógica de conexão)
+ * - Rotas: chats.js (emissão de eventos após envio)
+ */
+
+/**
+ * CONFIGURAÇÃO DO SOCKET.IO NO FRONTEND
+ * =====================================
+ * 
+ * 1. Incluir script no HTML (chat.html):
+ *    <script src="/socket.io/socket.io.js"></script>
+ * 
+ * 2. Conectar ao servidor (chat.js):
+ *    const socket = io({
+ *      auth: { token: sessionStorage.getItem('authToken') }
+ *    });
+ * 
+ * 3. Entrar na sala do grupo:
+ *    socket.emit('joinGroup', groupId);
+ * 
+ * 4. Escutar mensagens novas:
+ *    socket.on('newMessage', (message) => {
+ *      if (message.grupo_id === currentGroupId) {
+ *        appendMessage(message);
+ *      }
+ *    });
+ */
+
+/**
+ * EVENTOS SOCKET.IO
+ * ================
+ * 
+ * DO CLIENTE PARA O SERVIDOR:
+ * - joinGroup(groupId): Entrar na sala de um grupo
+ * - leaveGroup(groupId): Sair da sala de um grupo
+ * 
+ * DO SERVIDOR PARA O CLIENTE:
+ * - newMessage(message): Nova mensagem enviada para o grupo
+ *   Payload: { id, grupo_id, usuario_id, conteudo, criado_em, usuario_nome, ... }
+ */
+
+/**
+ * INTEGRAÇÃO COM O FLUXO DE ENVIO
+ * ==============================
+ * 
+ * Quando sendMessage() é chamado:
+ * 1. Frontend faz POST /api/chats/:groupId/send
+ * 2. Backend salva no banco e retorna a mensagem
+ * 3. Backend emite io.to(`group_${groupId}`).emit('newMessage', mensagem)
+ * 4. Todos os clientes na sala recebem o evento
+ * 5. Frontend adiciona a mensagem ao DOM via appendMessage()
+ * 
+ * IMPORTANTE: O remetente também recebe a mensagem via Socket.IO,
+ * então não é necessário adicionar manualmente após o POST.
+ */
+
+/**
+ * TRATAMENTO DE ERRO
+ * =================
+ * 
+ * socket.on('connect_error', (err) => {
+ *   console.error('Erro de conexão:', err.message);
+ *   // O chat continua funcionando via polling (refresh manual)
+ * });
+ * 
+ * socket.on('disconnect', () => {
+ *   console.log('Conexão perdida');
+ *   // Tentativa de reconexão automática do Socket.IO
+ * });
+ */
